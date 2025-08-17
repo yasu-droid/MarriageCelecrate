@@ -1,10 +1,84 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
-<meta charset="UTF-8">
-<title>Insert title here</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>メッセージ集</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: "Hiragino Maru Gothic Pro", "Segoe UI", sans-serif;
+      background: linear-gradient(135deg, #f0fff0, #e6ffe6);
+    }
+    header {
+      padding: 1.5rem;
+      background: #28a745;
+      color: white;
+      text-align: center;
+    }
+    h1 { margin: 0; }
+    .message-container {
+      max-width: 700px;
+      margin: 2rem auto;
+      padding: 1rem;
+    }
+    .message {
+      background: white;
+      margin: 1rem 0;
+      padding: 1rem 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      text-align: left;
+    }
+    .message p {
+      margin: 0.5rem 0;
+    }
+    .author {
+      text-align: right;
+      font-style: italic;
+      color: #555;
+    }
+    nav {
+      margin: 2rem;
+      text-align: center;
+    }
+    nav a {
+      padding: 0.6rem 1.5rem;
+      background: #28a745;
+      color: white;
+      text-decoration: none;
+      border-radius: 10px;
+      transition: background 0.2s;
+    }
+    nav a:hover {
+      background: #1e7e34;
+    }
+  </style>
 </head>
 <body>
+  <header>
+    <h1>💌 メッセージ集</h1>
+  </header>
 
+  <div class="message-container">
+    <div class="message">
+      <p>ご結婚おめでとうございます！末永くお幸せに✨</p>
+      <p class="author">— 友人A</p>
+    </div>
+    <div class="message">
+      <p>二人で素敵な家庭を築いてください😊</p>
+      <p class="author">— 同僚B</p>
+    </div>
+    <div class="message">
+      <p>笑顔あふれる毎日になりますように！</p>
+      <p class="author">— ご家族C</p>
+    </div>
+    <!-- 追加したい場合はここに .message を増やす -->
+  </div>
+
+  <nav>
+    <a href="index.html">🏠 ホームに戻る</a>
+  </nav>
 </body>
 </html>
