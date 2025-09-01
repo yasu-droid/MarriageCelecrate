@@ -1,97 +1,111 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>結婚祝いアルバム</title>
-  <link rel="stylesheet" href="css/style.css">
-  <style>
-    body {
-      margin: 0;
-      font-family: "Hiragino Maru Gothic Pro", "Segoe UI", sans-serif;
-      background: linear-gradient(135deg, #fff0f5, #ffe4e1);
-      color: #333;
-      text-align: center;
-      overflow-x: hidden;
-    }
-    header {
-      padding: 2rem 1rem;
-    }
-    header h1 {
-      font-size: 2.2rem;
-      color: #d63384;
-    }
-    nav {
-      margin: 2rem 0;
-    }
-    nav a {
-      display: inline-block;
-      margin: 1rem;
-      padding: 1rem 2rem;
-      font-size: 1.2rem;
-      text-decoration: none;
-      background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-      color: #d63384;
-      transition: transform 0.2s;
-    }
-    nav a:hover {
-      transform: scale(1.1);
-      background: #ffe6f0;
-    }
-    .footer {
-      margin-top: 3rem;
-      padding: 1rem;
-      font-size: 0.9rem;
-      color: #777;
-    }
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>結婚祝いアルバム</title>
+	<link rel="stylesheet" href="css/style.css">
+	<style>
+		body {
+			width: 100%;
+			max-width: 1000px;
+			min-width: 750px;
+			aspect-ratio: 20/9;
+			margin: 0;
+			font-family: "Hiragino Maru Gothic Pro", "Segoe UI", sans-serif;
+			background: linear-gradient(135deg, #fff0f5, #ffe4e1);
+			color: #333;
+			text-align: center;
+			overflow-x: hidden;
+		}
 
-    /* 花びら演出 */
-    .petal {
-      position: absolute;
-      top: -20px;
-      width: 20px;
-      height: 20px;
-      background: pink;
-      border-radius: 50%;
-      opacity: 0.8;
-      animation-name: fall;
-      animation-timing-function: linear;
-    }
-    @keyframes fall {
-      to {
-        transform: translateY(100vh) rotate(360deg);
-      }
-    }
-  </style>
+		header {
+			padding: 2rem 1rem;
+		}
+
+		header h1 {
+			font-size: 2.2rem;
+			color: #d63384;
+		}
+
+		nav {
+			margin: 2rem 0;
+		}
+
+		nav a {
+			display: inline-block;
+			margin: 1rem;
+			padding: 1rem 2rem;
+			font-size: 1.2rem;
+			text-decoration: none;
+			background: #fff;
+			border-radius: 12px;
+			box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+			color: #d63384;
+			transition: transform 0.2s;
+		}
+
+		nav a:hover {
+			transform: scale(1.1);
+			background: #ffe6f0;
+		}
+
+		.footer {
+			margin-top: 3rem;
+			padding: 1rem;
+			font-size: 0.9rem;
+			color: #777;
+		}
+
+		/* 花びら演出 */
+		.petal {
+			position: absolute;
+			top: -20px;
+			width: 20px;
+			height: 20px;
+			background: pink;
+			border-radius: 50%;
+			opacity: 0.8;
+			animation-name: fall;
+			animation-timing-function: linear;
+		}
+
+		@keyframes fall {
+			to {
+				transform: translateY(100vh) rotate(360deg);
+			}
+		}
+	</style>
 </head>
+
 <body>
-  <header>
-    <h1>💐 ご結婚おめでとう 💐</h1>
-    <p>思い出とメッセージをここに集めました</p>
-  </header>
+	<header>
+		<h1>💐 ご結婚おめでとう 💐</h1>
+		<p>思い出とメッセージをここに集めました</p>
+	</header>
 
-  <nav>
-    <a href="album.html">📷 思い出アルバム</a>
-    <a href="messages.html">💌 メッセージ集</a>
-  </nav>
+	<nav>
+		<a href="album.html">📷 思い出アルバム</a>
+		<a href="messages.html">💌 メッセージ集</a>
+	</nav>
 
-  <div class="footer">
-    <p>With Love, from your friends & family</p>
-  </div>
+	<div class="footer">
+		<p>With Love, from your friends & family</p>
+	</div>
 
-  <script>
-    // 花びらを生成する演出
-    function createPetal() {
-      const petal = document.createElement("div");
-      petal.className = "petal";
-      petal.style.left = Math.random() * window.innerWidth + "px";
-      petal.style.animationDuration = (3 + Math.random()*2) + "s";
-      document.body.appendChild(petal);
-      setTimeout(() => petal.remove(), 5000);
-    }
-    setInterval(createPetal, 300);
-  </script>
+	<script>
+		// 花びらを生成する演出
+		function createPetal() {
+			const petal = document.createElement("div");
+			petal.className = "petal";
+			petal.style.left = Math.random() * window.innerWidth + "px";
+			petal.style.animationDuration = (3 + Math.random() * 2) + "s";
+			document.body.appendChild(petal);
+			setTimeout(() => petal.remove(), 5000);
+		}
+		setInterval(createPetal, 300);
+	</script>
 </body>
+
 </html>
