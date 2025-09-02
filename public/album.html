@@ -1,71 +1,84 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>思い出アルバム</title>
-  <link rel="stylesheet" href="css/style.css">
-  <style>
-    body {
-      margin: 0;
-      font-family: "Hiragino Maru Gothic Pro", "Segoe UI", sans-serif;
-      background: linear-gradient(135deg, #fffaf0, #fff0f5);
-      text-align: center;
-    }
-    header {
-      padding: 1.5rem;
-      background: #d63384;
-      color: white;
-    }
-    h1 {
-      margin: 0;
-    }
-    .album-container {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1rem;
-      padding: 1.5rem;
-    }
-    .album-container img {
-      width: 100%;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-      transition: transform 0.2s;
-    }
-    .album-container img:hover {
-      transform: scale(1.05);
-    }
-    nav {
-      margin: 2rem;
-    }
-    nav a {
-      padding: 0.6rem 1.5rem;
-      background: #d63384;
-      color: white;
-      text-decoration: none;
-      border-radius: 10px;
-      transition: background 0.2s;
-    }
-    nav a:hover {
-      background: #b62a6d;
-    }
-  </style>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>思い出アルバム</title>
+	<link rel="stylesheet" href="css/style.css">
+	<style>
+		@media screen and (max-width:1000px) {
+			body {
+				margin: 0;
+				font-family: "Hiragino Maru Gothic Pro", "Segoe UI", sans-serif;
+				background: linear-gradient(135deg, #fffaf0, #fff0f5);
+				text-align: center;
+			}
+
+			header {
+				padding: 1.5rem;
+				background: #d63384;
+				color: white;
+			}
+
+			h1 {
+				margin: 0;
+			}
+
+			.album-container {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+				gap: 1rem;
+				padding: 1.5rem;
+			}
+
+			.album-container img {
+				width: 100%;
+				border-radius: 12px;
+				box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+				transition: transform 0.2s;
+			}
+
+			.album-container img:hover {
+				transform: scale(1.05);
+			}
+
+			nav {
+				margin: 2rem;
+			}
+
+			nav a {
+				padding: 0.6rem 1.5rem;
+				background: #d63384;
+				color: white;
+				text-decoration: none;
+				border-radius: 10px;
+				transition: background 0.2s;
+			}
+
+			nav a:hover {
+				background: #b62a6d;
+			}
+		}
+	</style>
 </head>
+
 <body>
-  <header>
-    <h1>📷 思い出アルバム</h1>
-  </header>
+	<header>
+		<h1>📷 思い出アルバム</h1>
+	</header>
 
-  <div class="album-container">
-    <img src="images/photo1.jpg" alt="思い出1">
-    <img src="images/photo2.jpg" alt="思い出2">
-    <img src="images/photo3.jpg" alt="思い出3">
-    <img src="images/photo4.jpg" alt="思い出4">
-    <!-- 追加したい場合はここにどんどん img を増やす -->
-  </div>
+	<div class="album-container">
+		<img src="images/photo1.jpg" alt="思い出1">
+		<img src="images/photo2.jpg" alt="思い出2">
+		<img src="images/photo3.jpg" alt="思い出3">
+		<img src="images/photo4.jpg" alt="思い出4">
+		<!-- 追加したい場合はここにどんどん img を増やす -->
+	</div>
 
-  <nav>
-    <a href="index.html">🏠 ホームに戻る</a>
-  </nav>
+	<nav>
+		<a href="index.html">🏠 ホームに戻る</a>
+	</nav>
 </body>
+
 </html>
