@@ -10,56 +10,63 @@
 			font-family: "Segoe UI", sans-serif;
 			background: linear-gradient(135deg, #ffe4e1, #e6f7ff);
 			height: 100vh;
+			/* 画面全体の高さ */
 			display: flex;
 			justify-content: center;
 			align-items: center;
 		}
 
 		form {
-			width: 90%;
-			max-width: 400px;
-			padding: 40px 30px;
+			width: 80%;
+			/* 画面幅の80%まで広げる */
+			max-width: 800px;
+			/* PCでも大きく映るように */
+			padding: 60px 40px;
+			/* 内側の余白も拡大 */
 			background-color: white;
-			border-radius: 20px;
-			box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+			border-radius: 30px;
+			box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
 			text-align: center;
 			animation: fadeIn 1s ease;
 		}
 
 		h1 {
-			margin-bottom: 20px;
+			margin-bottom: 30px;
 			color: #333;
-			font-size: 1.5rem;
+			font-size: 2rem;
+			/* 見出しも大きく */
 		}
 
 		input[type="text"] {
 			border: 2px solid #ccc;
 			background: none;
 			display: block;
-			margin: 20px auto;
-			padding: 12px 15px;
-			width: 80%;
+			margin: 25px auto;
+			padding: 20px 18px;
+			width: 70%;
+			/* 入力欄も広げる */
 			outline: none;
-			border-radius: 25px;
+			border-radius: 30px;
 			transition: 0.3s;
-			font-size: 1rem;
+			font-size: 1.2rem;
+			/* 入力文字も大きく */
 			text-align: center;
 		}
 
 		input[type="text"]:focus {
 			border-color: #66ccff;
 			background-color: #f0fcff;
-			width: 85%;
+			width: 75%;
 		}
 
 		button {
 			border: none;
-			padding: 12px 30px;
-			margin-top: 10px;
-			border-radius: 25px;
+			padding: 18px 40px;
+			margin-top: 20px;
+			border-radius: 30px;
 			background-color: #66ccff;
 			color: white;
-			font-size: 1rem;
+			font-size: 1.2rem;
 			font-weight: bold;
 			cursor: pointer;
 			transition: 0.3s;
@@ -67,22 +74,11 @@
 
 		button:hover {
 			background-color: #ff69b4;
-			transform: translateY(-2px);
-			box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-		}
-
-		@keyframes fadeIn {
-			from {
-				opacity: 0;
-				transform: translateY(20px);
-			}
-
-			to {
-				opacity: 1;
-				transform: translateY(0);
-			}
+			transform: translateY(-3px);
+			box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
 		}
 	</style>
+
 </head>
 
 <body>
