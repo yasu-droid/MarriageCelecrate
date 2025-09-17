@@ -86,32 +86,32 @@
 </head>
 
 <body>
-	<form name="login_form">
+	<form id="login_form" name="login_form">
 		<h1>ご結婚おめでとうございます！</h1>
-		<input type="text" name="name_id" placeholder="ご結婚されたあなたのお名前は？"><br>
+		<input type="text" id="name_id" name="name_id" placeholder="ご結婚されたあなたのお名前は？"><br>
 		<button type="submit">開始</button>
 	</form>
 </body>
 <script>
-  document.getElementById("login_form").addEventListener("submit", function (event) {
-    event.preventDefault(); // フォーム送信によるリロードを防ぐ
+	document.getElementById("login_form").addEventListener("submit", function (event) {
+		event.preventDefault(); // フォーム送信によるリロードを防ぐ
 
-    const name = document.getElementById("name_id").value.trim(); // 入力値を取得
+		const name = document.getElementById("name_id").value.trim(); // 入力値を取得
 
-    if (!name) { // 入力が空なら
-      alert("お名前を入力してください！");
-      return; // ここで処理終了
-    }
+		if (!name) { // 入力が空なら
+			alert("お名前を入力してください！");
+			return; // ここで処理終了
+		}
 
-    // 入力値ごとに分岐
-    if (name === "阪本明恵") {
-      window.location.href = "Fade.html"; 
-    } else if (name === "阪本紀之") {
-      window.location.href = "noriyuki.html";
-    } else if(name === "のりたろう"){
-      window.location.href = "special.html";
-    }
-  });
+		// 入力値ごとに分岐
+		if (name === "阪本明恵") {
+			window.location.href = "Fade.html";
+		} else if (name === "阪本紀之") {
+			window.location.href = "noriyuki.html";
+		} else if (name === "のりたろう") {
+			window.location.href = "special.html";
+		}
+	});
 </script>
 
 
