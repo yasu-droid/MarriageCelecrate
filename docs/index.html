@@ -9,23 +9,27 @@
 			margin: 0;
 			font-family: "Segoe UI", sans-serif;
 			background: linear-gradient(135deg, #ffe4e1, #e6f7ff);
-			height: 100vh;
-			/* 画面全体の高さ */
+
+			/* 画面いっぱいに広がるが、スマホでバーを考慮する */
+			min-height: 100dvh;
+			/* デバイス実際の表示領域に合わせる */
 			display: flex;
 			justify-content: center;
 			align-items: center;
+			padding: 10px;
+			/* 端っこがくっつかないように少し余白 */
+			box-sizing: border-box;
 		}
 
 		form {
-			width: 80%;
-			/* 画面幅の80%まで広げる */
-			max-width: 800px;
-			/* PCでも大きく映るように */
-			padding: 60px 40px;
-			/* 内側の余白も拡大 */
+			width: 100%;
+			max-width: 600px;
+			/* 横幅制限 */
+			padding: 40px 20px;
+			/* モバイルで見やすい余白 */
 			background-color: white;
-			border-radius: 30px;
-			box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+			border-radius: 20px;
+			box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 			text-align: center;
 			animation: fadeIn 1s ease;
 		}
