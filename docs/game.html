@@ -1,0 +1,224 @@
+<!DOCTYPE html> <!-- HTML5文書宣言 -->
+<html lang="ja"> <!-- 言語設定を日本語に -->
+<head>
+<meta charset="UTF-8"> <!-- 文字コードUTF-8を指定 -->
+<title>シューティングゲーム 完全版 解説付き</title> <!-- ページタイトル -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- スマホ・レスポンシブ対応 -->
+<style>
+body { 
+	margin: 0; /* デフォルトマージンを消す */
+	background: #000; /* 背景黒 */
+	display: flex; justify-content: center; align-items: center; /* canvasを中央配置 */
+	height: 100vh; /* 画面高さいっぱい */
+	overflow: hidden; /* はみ出し部分を非表示 */
+}
+canvas {
+	display: block; /* ブロック要素にする */
+	touch-action: none; /* タッチ操作でスクロールを防止 */
+	background: #111; /* 背景色を少し明るく */
+}
+button {
+	font-size: 20px; /* 文字サイズ */
+	padding: 15px 30px; /* 内側余白 */
+	border: none; /* 枠なし */
+	border-radius: 10px; /* 角丸 */
+	cursor: pointer; /* マウスオーバー時に手の形 */
+	background: #66ccff; color: #fff; /* 背景と文字色 */
+	position: absolute; top: 50%; left: 50%; /* 真ん中配置 */
+	transform: translate(-50%, -50%); /* 中央揃えの補正 */
+	display: none; /* 初期は非表示 */
+}
+</style>
+</head>
+<body>
+<canvas id="gameCanvas" width="400" height="600"></canvas> <!-- ゲーム描画用canvas -->
+
+<script>
+// ==== 初期化 ====
+const canvas = document.getElementById("gameCanvas"); // canvas要素取得
+const ctx = canvas.getContext("2d"); // 2D描画コンテキストを取得
+
+// ゲーム変数定義
+let player, bullets=[], enemies=[], enemyBullets=[], boss=null, bossBullets=[], explosions=[]; // 配列やオブジェクト管理
+let keys={}, gameOver=false, gameClear=false, startTime=Date.now(), message="", bgY=0; // キー入力・状態・背景スクロール
+
+// ==== キー入力 ====
+document.addEventListener("keydown", e=>keys[e.code]=true); // keydownで押下キーをtrueに
+document.addEventListener("keyup", e=>keys[e.code]=false); // keyupで離したキーをfalseに
+
+// ==== プレイヤー ====
+class Player { // ES6クラスでプレイヤー定義
+	constructor(){ 
+		this.x=canvas.width/2-15; this.y=canvas.height-50; this.width=30; this.height=30; this.speed=5; this.cooldown=0; 
+	} // プレイヤー位置・サイズ・速度・連射待機
+	draw(){ ctx.fillStyle="blue"; ctx.fillRect(this.x,this.y,this.width,this.height); } // 四角で描画
+	move(){ // 移動処理
+		if(keys["ArrowLeft"] && this.x>0) this.x-=this.speed; // 左矢印で左に
+		if(keys["ArrowRight"] && this.x+this.width<canvas.width) this.x+=this.speed; // 右矢印で右に
+		if(keys["Space"] && this.cooldown<=0){ bullets.push(new Bullet(this.x+this.width/2,this.y)); this.cooldown=10; } // スペースで弾発射
+		if(this.cooldown>0) this.cooldown--; // クールタイム減算
+	}
+}
+
+// ==== プレイヤー弾 ====
+class Bullet { 
+	constructor(x,y){ this.x=x; this.y=y; this.width=5; this.height=10; this.speed=7; } // 弾の位置・サイズ・速度
+	draw(){ ctx.fillStyle="red"; ctx.fillRect(this.x,this.y,this.width,this.height); } // 弾描画
+	update(){ this.y-=this.speed; } // 上方向移動
+}
+
+// ==== 雑魚敵 ====
+class Enemy {
+	constructor(){
+		this.type=Math.floor(Math.random()*3)+1; // 1〜3のタイプ
+		this.x=Math.random()*(canvas.width-30); this.y=-30; // 出現位置
+		this.width=30; this.height=30; this.hp=1; this.speed=2; this.angle=0; this.vx=2; // サイズ・HP・速度・角度・水平速度
+	}
+	draw(){
+		if(this.type===1) ctx.fillStyle="lime"; else if(this.type===2) ctx.fillStyle="pink"; else ctx.fillStyle="purple"; // 色分け
+		ctx.fillRect(this.x,this.y,this.width,this.height); 
+	}
+	update(){ // 動きの処理
+		if(this.type===1) this.y+=this.speed; // 直線落下
+		else if(this.type===2){ this.y+=this.speed; this.x+=Math.sin(this.angle)*2; this.angle+=0.1; } // ジグザグ
+		else { this.y+=this.speed; this.x+=this.vx; if(this.x<0||this.x+this.width>canvas.width) this.vx*=-1; } // 壁反射
+		if(Math.random()<0.01) enemyBullets.push(new EnemyBullet(this.x+this.width/2,this.y+this.height)); // ランダムで弾発射
+	}
+}
+
+// ==== 雑魚弾 ====
+class EnemyBullet {
+	constructor(x,y,vx=0,vy=3){ this.x=x; this.y=y; this.width=12; this.height=12; this.vx=vx; this.vy=vy; } // 速度vx,vy指定可
+	draw(){ ctx.fillStyle="yellow"; ctx.fillRect(this.x,this.y,this.width,this.height); }
+	update(){ this.x+=this.vx; this.y+=this.vy; } // 移動
+}
+
+// ==== 爆発 ====
+class Explosion {
+	constructor(x,y){ this.x=x; this.y=y; this.radius=5; this.maxRadius=20; } // 初期半径と最大
+	update(){ this.radius+=2; } // 半径拡大
+	draw(){ ctx.beginPath(); ctx.arc(this.x,this.y,this.radius,0,Math.PI*2); ctx.fillStyle="orange"; ctx.fill(); } // 円描画
+}
+
+// ==== ボス ====
+class Boss {
+	constructor(){
+		this.x=canvas.width/2-40; this.y=-80; this.width=80; this.height=60; this.vx=3; this.active=false; this.lastShot=0; this.colorHue=0; this.maxHp=20; this.hp=this.maxHp;
+	} // 初期位置、サイズ、速度、出現状態、色相、HP
+	draw(){
+		ctx.fillStyle=`hsl(${this.colorHue},100%,50%)`; ctx.fillRect(this.x,this.y,this.width,this.height); // 色相変化でアニメーション
+		const barWidth = 200*(this.hp/this.maxHp); ctx.fillStyle="lime"; ctx.fillRect(50,20,barWidth,10); ctx.strokeStyle="white"; ctx.strokeRect(50,20,200,10); // HPバー描画
+		this.colorHue+=2; if(this.colorHue>360) this.colorHue=0; // 色相ループ
+	}
+	update(time){ 
+		if(!this.active){ this.y+=2; if(this.y>=50)this.active=true; } // 出現アニメーション
+		else{ this.x+=this.vx; if(this.x<0||this.x+this.width>canvas.width)this.vx*=-1; this.shootScatter(time); } // 左右往復＋散弾攻撃
+	}
+	shootScatter(time){ 
+		if(time-this.lastShot>=500){ // 0.5秒間隔
+			const cx=this.x+this.width/2, cy=this.y+this.height; 
+			for(let angle=-30; angle<=30; angle+=15){ 
+				const rad = angle*Math.PI/180; // 角度をラジアンに変換
+				const vx = Math.sin(rad)*3; // x方向速度
+				const vy = Math.cos(rad)*4; // y方向速度
+				bossBullets.push(new BossBullet(cx,cy,vx,vy)); // 弾生成
+			}
+			this.lastShot=time; // 発射時間更新
+		}
+	}
+	hit(){ 
+		this.hp--; 
+		if(this.hp<=0){ 
+			explosions.push(new Explosion(this.x+this.width/2,this.y+this.height/2)); 
+			gameClear=true; 
+			showActionButton("reward"); 
+			boss=null; 
+		} 
+	}
+}
+
+// ==== ボス弾 ====
+class BossBullet {
+	constructor(x,y,vx=0,vy=4){ this.x=x; this.y=y; this.width=8; this.height=8; this.vx=vx; this.vy=vy; }
+	draw(){ ctx.fillStyle="orange"; ctx.fillRect(this.x,this.y,this.width,this.height); }
+	update(){ this.x+=this.vx; this.y+=this.vy; }
+}
+
+// ==== 初期化 ====
+function init(){ 
+	player=new Player(); 
+	setInterval(()=>{ if(!boss&&!gameOver&&Date.now()-startTime<20000) enemies.push(new Enemy()); },800); // 0.8秒間隔で雑魚生成
+}
+init();
+
+// ==== ボタン共通化 ====
+function setButton(id,text,onclick){ 
+	let btn=document.getElementById(id);
+	if(!btn){ btn=document.createElement("button"); btn.id=id; btn.innerText=text; btn.onclick=onclick; document.body.appendChild(btn); } 
+	btn.style.display="block"; // 表示
+}
+function hideButton(id){ let btn=document.getElementById(id); if(btn) btn.style.display="none"; }
+function showActionButton(type){ // retry or reward
+	if(type==="retry") setButton("actionBtn","リトライ",()=>location.reload());
+	else if(type==="reward") setButton("actionBtn","報酬を受け取る",()=>window.location.href="Fade.html");
+}
+
+// ==== メッセージ表示 ====
+function showMessage(text){ message=text; }
+
+// ==== ゲームループ ====
+function gameLoop(time){
+	// 背景スクロール
+	bgY+=2; 
+	ctx.fillStyle="#111"; 
+	ctx.fillRect(0,bgY%canvas.height,canvas.width,canvas.height);
+	ctx.fillRect(0,(bgY%canvas.height)-canvas.height,canvas.width,canvas.height);
+
+	if(!gameOver&&!gameClear){
+		player.move(); player.draw();
+
+		// プレイヤー弾
+		for(let i=bullets.length-1;i>=0;i--){ let b=bullets[i]; b.update(); b.draw(); if(b.y<0) bullets.splice(i,1); }
+
+		// 雑魚敵
+		for(let i=enemies.length-1;i>=0;i--){
+			let e=enemies[i]; e.update(); e.draw();
+			if(player.x<e.x+e.width && player.x+player.width>e.x && player.y<e.y+e.height && player.y+player.height>e.y){
+				gameOver=true; showMessage("Game Over"); showActionButton("retry");
+			}
+			for(let j=bullets.length-1;j>=0;j--){ let b=bullets[j]; 
+				if(b.x<e.x+e.width && b.x+b.width>e.x && b.y<e.y+e.height && b.y+b.height>e.y){ bullets.splice(j,1); enemies.splice(i,1); break; }
+			}
+		}
+
+		// 雑魚弾
+		for(let i=enemyBullets.length-1;i>=0;i--){ let eb=enemyBullets[i]; eb.update(); eb.draw(); if(eb.y>canvas.height) enemyBullets.splice(i,1);
+			if(player.x<eb.x+eb.width && player.x+player.width>eb.x && player.y<eb.y+eb.height && player.y+player.height>eb.y){ gameOver=true; showMessage("Game Over"); showActionButton("retry"); }
+		}
+
+		// ボス出現
+		if(!boss && Date.now()-startTime>=20000){ enemies=[]; boss=new Boss(); }
+
+		if(boss){
+			boss.update(time); boss.draw();
+			for(let j=bullets.length-1;j>=0;j--){ let b=bullets[j]; 
+				if(b.x<boss.x+boss.width && b.x+b.width>boss.x && b.y<boss.y+boss.height && b.y+b.height>boss.y){ bullets.splice(j,1); boss.hit(); }
+			}
+			for(let i=bossBullets.length-1;i>=0;i--){ let bb=bossBullets[i]; bb.update(); bb.draw(); if(bb.y>canvas.height) bossBullets.splice(i,1);
+				if(player.x<bb.x+bb.width && player.x+player.width>bb.x && player.y<bb.y+bb.height && player.y+player.height>bb.y){ gameOver=true; showMessage("Game Over"); showActionButton("retry"); }
+			}
+		}
+
+		// 爆発描画
+		for(let i=explosions.length-1;i>=0;i--){ let exp=explosions[i]; exp.update(); exp.draw(); if(exp.radius>exp.maxRadius) explosions.splice(i,1); }
+	}
+
+	// メッセージ表示
+	if(message){ ctx.fillStyle="white"; ctx.font="30px Arial"; ctx.textAlign="center"; ctx.fillText(message, canvas.width/2, 50); }
+
+	requestAnimationFrame(gameLoop);
+}
+requestAnimationFrame(gameLoop);
+</script>
+</body>
+</html>
