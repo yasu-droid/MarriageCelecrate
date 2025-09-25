@@ -69,7 +69,8 @@
 
 		let player, bullets = [], enemies = [], enemyBullets = [], boss = null, explosions = [];
 		let gameStarted = false, gameOver = false, bossSpawned = false;
-		let moveDir = null;            // "left" / "right" or null
+		/* ========== 入力処理 ========== */
+		let moveDir = null; // "left" or "right"
 		let startTime = 0;
 		let playerControlEnabled = true; // 撃破演出中は false
 
@@ -317,28 +318,30 @@
 		rewardBtn.style.display = "none";
 
 		/* ========== 入力（スマホ長押し + キーボード） ========== */
-		/* タッチ開始：押した位置によって左右どちらに動くか決定 */
+		/* スマホ操作: 長押しで移動、スライドで方向変更、離すと停止 */
 		canvas.addEventListener("touchstart", e => {
 			if (!gameStarted || gameOver || !player || !playerControlEnabled) return;
 			const touchX = e.touches[0].clientX - canvas.getBoundingClientRect().left;
 			moveDir = (touchX < canvas.width / 2) ? "left" : "right";
 			e.preventDefault(); // スクロール防止
 		});
+
 		/* タッチ移動：押しっぱなし中に指を左右に動かしたら方向を切り替える */
 		canvas.addEventListener("touchmove", e => {
 			if (!gameStarted || gameOver || !player || !playerControlEnabled) return;
 			const touchX = e.touches[0].clientX - canvas.getBoundingClientRect().left;
 			moveDir = (touchX < canvas.width / 2) ? "left" : "right";
-			e.preventDefault(); // スクロール防止
+			e.preventDefault();
 		});
 
 		/* タッチ終了：指を離したら停止 */
 		canvas.addEventListener("touchend", e => {
 			moveDir = null;
-			e.preventDefault(); // スクロール防止
+			e.preventDefault();
 		});
 
 		/* キーボード左右で動かす */
+		/* キーボード操作: 左右キーで移動 */
 		document.addEventListener("keydown", e => {
 			if (!gameStarted || gameOver || !player || !playerControlEnabled) return;
 			if (e.key === "ArrowLeft") moveDir = "left";
@@ -348,7 +351,7 @@
 			if (e.key === "ArrowLeft" && moveDir === "left") moveDir = null;
 			if (e.key === "ArrowRight" && moveDir === "right") moveDir = null;
 		});
-
+		
 		/* ========== メインループ ========== */
 		let autoShootTimer = null;
 		function gameLoop(time) {
