@@ -54,7 +54,7 @@ const countdownEl = document.getElementById("countdown");
 const retryBtn = document.getElementById("retryBtn");
 
 let player, bullets=[], enemies=[], enemyBullets=[];
-let gameStarted=false, gameOver=false, startTime=0;
+let gameStarted=false, gameOver=false;
 
 // ===== プレイヤー =====
 class Player {
@@ -63,7 +63,7 @@ class Player {
     this.y=canvas.height-50;
     this.width=30;
     this.height=30;
-    this.speed=5;
+    this.speed=8;
   }
   draw(){
     ctx.fillStyle="blue";
@@ -108,7 +108,7 @@ class Enemy {
 class EnemyBullet {
   constructor(x,y){
     this.x=x; this.y=y;
-    this.width=8; this.height=8;
+    this.width=10; this.height=10;
     this.speed=4;
   }
   update(){ this.y+=this.speed; }
@@ -137,10 +137,9 @@ function startCountdown(){
 function startGame(){
   player=new Player();
   gameStarted=true;
-  startTime=Date.now();
   requestAnimationFrame(gameLoop);
   // 敵生成ループ
-  setInterval(()=>{ if(!gameOver) enemies.push(new Enemy()); },1000);
+  setInterval(()=>{ if(!gameOver) enemies.push(new Enemy()); },1200);
 }
 
 // ===== ゲームループ =====
@@ -197,7 +196,7 @@ function gameLoop(){
     ctx.fillStyle="white";
     ctx.font="30px Arial";
     ctx.textAlign="center";
-    ctx.fillText("Game Over",canvas.width/2,50);
+    ctx.fillText("Game Over",canvas.width/2,60);
   }
 
   if(!gameOver) requestAnimationFrame(gameLoop);
@@ -233,4 +232,5 @@ setInterval(()=>{
 // ===== ページロードでカウントダウン開始 =====
 window.onload=startCountdown;
 </script>
-</
+</body>
+</html>
