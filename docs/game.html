@@ -12,9 +12,7 @@
 			background: #000;
 			display: flex;
 			justify-content: center;
-			/* 横方向中央 */
-			align-items: flex-start;
-			/* 縦方向は上寄せ */
+			align-items: center;
 			height: 100vh;
 			overflow: hidden;
 		}
@@ -23,10 +21,7 @@
 			background: #111;
 			display: block;
 			touch-action: none;
-			margin-top: 10px;
-			/* 上に少し余白 */
 		}
-
 
 		/* カウントダウン中央表示 */
 		#countdown {
@@ -218,19 +213,25 @@
 				if (this.defeating) return;
 				this.hp--;
 				if (this.hp <= 0) {
-					// 撃破開始
 					this.defeating = true;
 					this.defeatStartTime = performance.now();
-					playerControlEnabled = false; // プレイヤー操作不可
-					// 雑魚を同時に消す
+					playerControlEnabled = false;
+
+					// 弾と敵をすべて消す
 					enemies = [];
-					// 発動：3秒後にクリア表示と報酬ボタン表示
+					enemyBullets = [];
+					bossBullets = [];
+					bullets = [];
+
+					// 自動射撃タイマー停止
+					clearInterval(autoShootTimer);
+
 					setTimeout(() => {
-						// 表示
 						showGameClear();
 					}, 3000);
 				}
 			}
+
 		}
 
 		/* ===== ボス弾（壁で跳ね返る） ===== */
@@ -312,9 +313,24 @@
 
 		/* End game on collision with enemy/enemyBullet */
 		function endGame() {
-			gameOver = true;
-			retryBtn.style.display = "block";
+			if (!player) return;
+
+			// プレイヤー中心に爆発を作る
+			explosions.push(new Explosion(player.x + player.width / 2, player.y + player.height / 2));
+
+			// プレイヤー描画停止
+			playerControlEnabled = false;
+
+			// 0.5秒後にゲームオーバーとリトライボタンを表示
+			setTimeout(() => {
+				gameOver = true;
+				retryBtn.style.display = "block";
+
+				// プレイヤーを消す
+				player = null;
+			}, 500);
 		}
+
 
 		/* reset helper (used by retry button) */
 		retryBtn.onclick = () => location.reload();
@@ -360,19 +376,15 @@
 		/* ========== メインループ ========== */
 		let autoShootTimer = null;
 		function gameLoop(time) {
-			// クリア画面表示中は gameOver true なので描画は最小限
 			ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-			// 背景（シンプル）
+			// 背景
 			ctx.fillStyle = "#111";
 			ctx.fillRect(0, 0, canvas.width, canvas.height);
 
 			if (gameStarted) {
-				// プレイヤー update/draw
-				if (player) {
-					player.update();
-					player.draw();
-				}
+				// プレイヤー
+				if (player) {player.update(); player.draw();}
 
 				// プレイヤー弾
 				for (let i = bullets.length - 1; i >= 0; i--) {
@@ -381,9 +393,10 @@
 					b.draw();
 					if (b.y + b.height < 0) {bullets.splice(i, 1); continue;}
 
-					// 弾がボスに当たったらボスにダメージ（雑魚にも判定済み below）
+					// ボス判定
 					if (boss && !boss.defeating) {
-						if (b.x < boss.x + boss.width && b.x + b.width > boss.x && b.y < boss.y + boss.height && b.y + b.height > boss.y) {
+						if (b.x < boss.x + boss.width && b.x + b.width > boss.x &&
+							b.y < boss.y + boss.height && b.y + b.height > boss.y) {
 							bullets.splice(i, 1);
 							boss.hit();
 							continue;
@@ -391,22 +404,24 @@
 					}
 				}
 
-				// 雑魚 update/draw & collision
+				// 雑魚
 				for (let i = enemies.length - 1; i >= 0; i--) {
 					const e = enemies[i];
 					e.update();
 					e.draw();
 					if (e.y > canvas.height) {enemies.splice(i, 1); continue;}
 
-					// 雑魚とプレイヤー衝突
-					if (player && player.x < e.x + e.width && player.x + player.width > e.x && player.y < e.y + e.height && player.y + player.height > e.y) {
+					// プレイヤー衝突
+					if (player && player.x < e.x + e.width && player.x + player.width > e.x &&
+						player.y < e.y + e.height && player.y + player.height > e.y) {
 						endGame(); break;
 					}
 
-					// プレイヤー弾と雑魚（弾は雑魚を倒す）
+					// プレイヤー弾判定
 					for (let j = bullets.length - 1; j >= 0; j--) {
 						const bb = bullets[j];
-						if (bb.x < e.x + e.width && bb.x + bb.width > e.x && bb.y < e.y + e.height && bb.y + bb.height > e.y) {
+						if (bb.x < e.x + e.width && bb.x + bb.width > e.x &&
+							bb.y < e.y + e.height && bb.y + bb.height > e.y) {
 							bullets.splice(j, 1);
 							enemies.splice(i, 1);
 							break;
@@ -421,66 +436,61 @@
 					eb.draw();
 					if (eb.y > canvas.height) {enemyBullets.splice(i, 1); continue;}
 
-					// 敵弾がプレイヤーに当たったらゲームオーバー
-					if (player && player.x < eb.x + eb.width && player.x + player.width > eb.x && player.y < eb.y + eb.height && player.y + player.height > eb.y) {
+					if (player && player.x < eb.x + eb.width && player.x + player.width > eb.x &&
+						player.y < eb.y + eb.height && player.y + player.height > eb.y) {
 						endGame(); break;
 					}
 				}
 
-				// ボス弾（跳ね返る）
+				// ボス弾
 				for (let i = bossBullets.length - 1; i >= 0; i--) {
 					const bb = bossBullets[i];
 					bb.update();
 					bb.draw();
-					// remove if off bottom
 					if (bb.y > canvas.height + 100) {bossBullets.splice(i, 1); continue;}
 
-					// boss弾は雑魚/ボスに当たっても体力は減らない（仕様）
-					// プレイヤーに当たったらゲームオーバー
-					if (player && player.x < bb.x + bb.width && player.x + player.width > bb.x && player.y < bb.y + bb.height && player.y + player.height > bb.y) {
+					if (player && player.x < bb.x + bb.width && player.x + player.width > bb.x &&
+						player.y < bb.y + bb.height && player.y + player.height > bb.y) {
 						endGame(); break;
 					}
 				}
 
-				// 爆発描画
+				// 爆発
 				for (let i = explosions.length - 1; i >= 0; i--) {
 					explosions[i].update();
 					explosions[i].draw();
 					if (explosions[i].r > explosions[i].maxR) explosions.splice(i, 1);
 				}
 
-				// ボス update/draw
+				// ボス
 				if (boss) {
 					boss.update(time);
 					boss.draw();
-					// ボスが撃破アニメーション中で alpha <= 0（完全に消えた）なら boss を消す
-					if (boss.defeating && boss.alpha <= 0.01) {
-						boss = null; // boss 完全除去
-					}
+					if (boss.defeating && boss.alpha <= 0.01) boss = null;
 				}
 			}
 
-			// Game Over 表示（上部）
-			if (gameOver) {
-				ctx.fillStyle = "white";
-				ctx.font = "30px Arial";
-				ctx.textAlign = "center";
+			// ---------------------------
+			// 描画: Game Clear / Game Over
+			// ---------------------------
+			ctx.fillStyle = "white";
+			ctx.font = "30px Arial";
+			ctx.textAlign = "center";
+
+			if (rewardBtn.style.display === "block") {
+				// クリア優先
+				ctx.fillText("Game Clear", canvas.width / 2, 60);
+			} else if (gameOver) {
+				// クリアしていなければ Game Over
 				ctx.fillText("Game Over", canvas.width / 2, 60);
 			}
 
-			// Game Clear 表示: rewardBtn 出したとき gameOver true になっているので show text top too
-			if (rewardBtn.style.display === "block") {
-				ctx.fillStyle = "white";
-				ctx.font = "30px Arial";
-				ctx.textAlign = "center";
-				ctx.fillText("Game Clear", canvas.width / 2, 60);
-			}
-
 			// 次フレーム
-			if (!gameOver || rewardBtn.style.display === "block") { // reward表示後もループ（でも操作は無効）
+			if (!gameOver || rewardBtn.style.display === "block") {
 				requestAnimationFrame(gameLoop);
 			}
 		}
+
 
 		/* ========== ユーティリティ / 初期化 ========== */
 		/* retry はリロードで簡単に */
