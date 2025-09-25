@@ -23,17 +23,20 @@
 			touch-action: none;
 		}
 
-		/* カウントダウン中央表示 */
+		/* カウントダウン中央表示 → 上部表示 */
 		#countdown {
 			position: absolute;
-			top: 50%;
+			top: 10px;
+			/* 画面上から10px下 */
 			left: 50%;
-			transform: translate(-50%, -50%);
+			transform: translateX(-50%);
+			/* 横方向だけ中央 */
 			color: #fff;
 			font-size: 80px;
 			font-family: Arial, sans-serif;
 			text-align: center;
 		}
+
 
 		/* 中央ボタン（リトライ／報酬 共通スタイル） */
 		button.actionBtn {
@@ -45,9 +48,10 @@
 			background: #66ccff;
 			color: #fff;
 			position: absolute;
-			top: 50%;
+			top: 100px;
+			/* 画面上から100px下 */
 			left: 50%;
-			transform: translate(-50%, -50%);
+			transform: translateX(-50%);
 			display: none;
 		}
 	</style>
@@ -351,7 +355,7 @@
 			if (e.key === "ArrowLeft" && moveDir === "left") moveDir = null;
 			if (e.key === "ArrowRight" && moveDir === "right") moveDir = null;
 		});
-		
+
 		/* ========== メインループ ========== */
 		let autoShootTimer = null;
 		function gameLoop(time) {
