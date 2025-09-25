@@ -2,524 +2,415 @@
 <html lang="ja">
 
 <head>
-	<meta charset="UTF-8">
-	<title>シューティングゲーム（ボス追加版）</title>
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<style>
-		/* --- レイアウト --- */
-		body {
-			margin: 0;
-			background: #000;
-			display: flex;
-			justify-content: flex-start;
-			/* 上寄せに変更 */
-			align-items: flex-start;
-			/* 上寄せ */
-			height: 100vh;
-			overflow: hidden;
-			position: relative;
-		}
+    <meta charset="UTF-8">
+    <title>シューティングゲーム（ボス追加版）</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* --- レイアウト --- */
+        body {
+            margin: 0;
+            background: #000;
+            display: flex;
+            justify-content: flex-start;
+            align-items: flex-start;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
 
-		canvas {
-			background: #111;
-			display: block;
-			touch-action: none;
-			margin-top: 0;
-			/* 上部にぴったり */
-		}
+        canvas {
+            background: #111;
+            display: block;
+            touch-action: none;
+            margin-top: 0;
+        }
 
+        /* カウントダウン中央表示 */
+        #countdown {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-size: 80px;
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
 
-		/* カウントダウン中央表示 */
-		#countdown {
-			position: absolute;
-			top: 50%;
-			left: 50%;
-			transform: translate(-50%, -50%);
-			color: #fff;
-			font-size: 80px;
-			font-family: Arial, sans-serif;
-			text-align: center;
-		}
-
-		/* 中央ボタン（リトライ／報酬 共通スタイル） */
-		button.actionBtn {
-			font-size: 20px;
-			padding: 15px 30px;
-			border: none;
-			border-radius: 10px;
-			cursor: pointer;
-			background: #66ccff;
-			color: #fff;
-			position: absolute;
-			top: 50%;
-			left: 50%;
-			transform: translate(-50%, -50%);
-			display: none;
-		}
-	</style>
+        /* 中央ボタン（リトライ／報酬 共通スタイル） */
+        button.actionBtn {
+            font-size: 20px;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            background: #66ccff;
+            color: #fff;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: none;
+        }
+    </style>
 </head>
 
 <body>
-	<canvas id="gameCanvas" width="400" height="600"></canvas>
-	<div id="countdown"></div>
-	<button id="retryBtn" class="actionBtn">リトライ</button>
-	<button id="rewardBtn" class="actionBtn">報酬をゲット</button>
-
-	<script>
-		/* ========== 基本セットアップ ========== */
-		function resizeCanvas() {
-			const vh = window.innerHeight * 0.01; // iPhone のブラウザバーを考慮
-			canvas.width = window.innerWidth;
-			canvas.height = window.innerHeight;
-			// または canvas.height = vh * 100;
-		}
-
-		window.addEventListener('resize', resizeCanvas);
-		window.addEventListener('orientationchange', resizeCanvas);
-		resizeCanvas(); // 初期呼び出し
-
-
-		const ctx = canvas.getContext("2d");
-		const countdownEl = document.getElementById("countdown");
-		const retryBtn = document.getElementById("retryBtn");
-		const rewardBtn = document.getElementById("rewardBtn");
-
-		let player, bullets = [], enemies = [], enemyBullets = [], boss = null, explosions = [];
-		let gameStarted = false, gameOver = false, bossSpawned = false;
-		/* ========== 入力処理 ========== */
-		let moveDir = null; // "left" or "right"
-		let startTime = 0;
-		let playerControlEnabled = true; // 撃破演出中は false
-
-		/* ========== プレイヤー ========== */
-		class Player {
-			constructor() {
-				this.width = 30;
-				this.height = 30;
-				this.x = canvas.width / 2 - this.width / 2;
-				this.y = canvas.height - 50; // canvas 高さ基準
-				this.speed = 6;
-				this.cooldown = 0;
-			}
-			update() {
-				if (!playerControlEnabled) return; // 制御無効中は移動禁止
-				if (moveDir === "left" && this.x > 0) this.x -= this.speed;
-				if (moveDir === "right" && this.x + this.width < canvas.width) this.x += this.speed;
-				if (this.cooldown > 0) this.cooldown--;
-			}
-			draw() {
-				ctx.fillStyle = "blue";
-				ctx.fillRect(this.x, this.y, this.width, this.height);
-			}
-		}
-
-		/* ========== プレイヤー弾 ========== */
-		class Bullet {
-			constructor(x, y) {
-				this.x = x; this.y = y; this.width = 5; this.height = 10; this.speed = 8;
-			}
-			update() {this.y -= this.speed;}
-			draw() {ctx.fillStyle = "red"; ctx.fillRect(this.x, this.y, this.width, this.height);}
-		}
-
-		/* ========== 雑魚 ========== */
-		class Enemy {
-			constructor() {
-				this.width = 30; this.height = 30;
-				this.x = Math.random() * (canvas.width - this.width);
-				this.y = -30;
-				this.speed = 2; // 雑魚スピード
-			}
-			update() {
-				this.y += this.speed;
-				if (Math.random() < 0.02) enemyBullets.push(new EnemyBullet(this.x + this.width / 2, this.y + this.height));
-			}
-			draw() {ctx.fillStyle = "lime"; ctx.fillRect(this.x, this.y, this.width, this.height);}
-		}
-
-		/* ========== 雑魚弾 ========== */
-		class EnemyBullet {
-			constructor(x, y) {
-				this.x = x; this.y = y; this.width = 8; this.height = 8; this.speed = 4;
-			}
-			update() {this.y += this.speed;}
-			draw() {ctx.fillStyle = "yellow"; ctx.fillRect(this.x, this.y, this.width, this.height);}
-		}
-
-		/* ========== 爆発エフェクト ========== */
-		class Explosion {
-			constructor(x, y) {
-				this.x = x; this.y = y; this.r = 6; this.maxR = 40;
-			}
-			update() {this.r += 2;}
-			draw() {
-				ctx.beginPath();
-				ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
-				ctx.fillStyle = "orange";
-				ctx.fill();
-			}
-		}
-
-		/* ========== ボス ========== */
-		class Boss {
-			constructor() {
-				this.width = player.width * 3;              // プレイヤーの横幅3つ分
-				this.height = 50;
-				this.x = canvas.width / 2 - this.width / 2;
-				this.y = 30;
-				this.vx = 2;                                // 移動速度（雑魚と同じ）
-				this.hp = 10;                               // プレイヤー攻撃10回で撃破
-				this.lastShot = 0;
-				this.defeating = false;                     // 撃破アニメーション中フラグ
-				this.alpha = 1.0;                           // フェード用
-				this.defeatStartTime = 0;
-			}
-
-			update(time) {
-				if (this.defeating) {
-					// 撃破アニメーション：上に移動しつつフェード
-					const elapsed = time - this.defeatStartTime;
-					const duration = 3000; // 3秒
-					const t = Math.min(elapsed / duration, 1);
-					this.y -= 0.6; // 背後へ下がっていくイメージ（ここは「上に退く」）
-					this.alpha = 1 - t;
-					// 爆発を断続的に追加（見栄え）
-					if (Math.random() < 0.3) explosions.push(new Explosion(this.x + Math.random() * this.width, this.y + Math.random() * this.height));
-					return;
-				}
-
-				// 左右往復
-				this.x += this.vx;
-				if (this.x < 0) {this.x = 0; this.vx *= -1;}
-				if (this.x + this.width > canvas.width) {this.x = canvas.width - this.width; this.vx *= -1;}
-
-				// 射撃（1秒間隔で3方向）
-				if (time - this.lastShot >= 1000) {
-					this.shootThree();
-					this.lastShot = time;
-				}
-			}
-
-			draw() {
-				ctx.save();
-				ctx.globalAlpha = this.alpha;
-				ctx.fillStyle = "blue"; // 指定の青色
-				ctx.fillRect(this.x, this.y, this.width, this.height);
-				// HPバー（上部）
-				const barWidth = 200 * (this.hp / 10);
-				ctx.fillStyle = "lime";
-				ctx.fillRect((canvas.width - 200) / 2, 10, barWidth, 8);
-				ctx.strokeStyle = "white";
-				ctx.strokeRect((canvas.width - 200) / 2, 10, 200, 8);
-				ctx.restore();
-			}
-
-			shootThree() {
-				// 3方向：左斜め、真下、右斜め（vx, vy）
-				const cx = this.x + this.width / 2;
-				const cy = this.y + this.height;
-				// left diag
-				bossBullets.push(new BossBullet(cx, cy, -2, 3));
-				// center
-				bossBullets.push(new BossBullet(cx, cy, 0, 4));
-				// right diag
-				bossBullets.push(new BossBullet(cx, cy, 2, 3));
-			}
-
-			hit() {
-				if (this.defeating) return;
-				this.hp--;
-				if (this.hp <= 0) {
-					this.defeating = true;
-					this.defeatStartTime = performance.now();
-					playerControlEnabled = false;
-
-					// 弾と敵をすべて消す
-					enemies = [];
-					enemyBullets = [];
-					bossBullets = [];
-					bullets = [];
-
-					// 自動射撃タイマー停止
-					clearInterval(autoShootTimer);
-
-					setTimeout(() => {
-						showGameClear();
-					}, 3000);
-				}
-			}
-
-		}
-
-		/* ===== ボス弾（壁で跳ね返る） ===== */
-		class BossBullet {
-			constructor(x, y, vx = 0, vy = 4) {
-				this.x = x; this.y = y; this.vx = vx; this.vy = vy;
-				this.width = 12; this.height = 12;
-			}
-			update() {
-				this.x += this.vx;
-				this.y += this.vy;
-				// 壁で跳ね返る（左右）
-				if (this.x < 0) {this.x = 0; this.vx *= -1;}
-				if (this.x + this.width > canvas.width) {this.x = canvas.width - this.width; this.vx *= -1;}
-			}
-			draw() {ctx.fillStyle = "orange"; ctx.fillRect(this.x, this.y, this.width, this.height);}
-		}
-
-		/* ========== ゲーム管理関数 ========== */
-
-		function startCountdown() {
-			let t = 3;
-			countdownEl.innerText = t;
-			const timer = setInterval(() => {
-				t--;
-				if (t > 0) countdownEl.innerText = t;
-				else if (t === 0) countdownEl.innerText = "START!";
-				else {
-					clearInterval(timer);
-					countdownEl.style.display = "none";
-					startGame();
-				}
-			}, 1000);
-		}
-
-		let enemySpawner = null;
-		let bossBullets = []; // ボス弾配列
-
-		function startGame() {
-			player = new Player();
-			gameStarted = true;
-			startTime = Date.now();
-			// 雑魚生成（ただし boss がいるときは生成を抑制）
-			enemySpawner = setInterval(() => {
-				if (!gameOver && !bossSpawned) enemies.push(new Enemy());
-			}, 1200);
-
-			// 10秒後にボス出現
-			setTimeout(() => {
-				if (!gameOver) {
-					spawnBoss();
-				}
-			}, 10000);
-
-			// 自動射撃（プレイヤー弾）
-			autoShootTimer = setInterval(() => {
-				if (gameStarted && !gameOver && player) bullets.push(new Bullet(player.x + player.width / 2, player.y));
-			}, 300);
-
-			requestAnimationFrame(gameLoop);
-		}
-
-		function spawnBoss() {
-			if (bossSpawned) return;
-			bossSpawned = true;
-			boss = new Boss();
-			// 新しい雑魚が湧かないようにする（enemySpawner checks bossSpawned)
-		}
-
-		/* Show Game Clear (after boss defeat animation) */
-		function showGameClear() {
-			// 3秒演出後に表示：画面上部に Game Clear、中央に報酬ボタン（報酬は rewardBtn)
-			gameOver = true; // ゲーム進行停止（ただし we already finished boss anim)
-			// 表示 Game Clear on canvas top in gameLoop (we set a flag)
-			rewardBtn.style.display = "block";
-			// change rewardBtn action to go to Fade.html (or change as needed)
-			rewardBtn.onclick = () => {window.location.href = "Fade.html";};
-		}
-
-		/* End game on collision with enemy/enemyBullet */
-		function endGame() {
-			if (!player) return;
-
-			// プレイヤー中心に爆発を作る
-			explosions.push(new Explosion(player.x + player.width / 2, player.y + player.height / 2));
-
-			// プレイヤー描画停止
-			playerControlEnabled = false;
-
-			// 0.5秒後にゲームオーバーとリトライボタンを表示
-			setTimeout(() => {
-				gameOver = true;
-				retryBtn.style.display = "block";
-
-				// プレイヤーを消す
-				player = null;
-			}, 500);
-		}
-
-
-		/* reset helper (used by retry button) */
-		retryBtn.onclick = () => location.reload();
-
-		/* rewardBtn initially hidden; retry and reward share same design (CSS class) */
-		rewardBtn.style.display = "none";
-
-		/* ========== 入力（スマホ長押し + キーボード） ========== */
-		/* スマホ操作: 長押しで移動、スライドで方向変更、離すと停止 */
-		canvas.addEventListener("touchstart", e => {
-			if (!gameStarted || gameOver || !player || !playerControlEnabled) return;
-			const touchX = e.touches[0].clientX - canvas.getBoundingClientRect().left;
-			moveDir = (touchX < canvas.width / 2) ? "left" : "right";
-			e.preventDefault(); // スクロール防止
-		});
-
-		/* タッチ移動：押しっぱなし中に指を左右に動かしたら方向を切り替える */
-		canvas.addEventListener("touchmove", e => {
-			if (!gameStarted || gameOver || !player || !playerControlEnabled) return;
-			const touchX = e.touches[0].clientX - canvas.getBoundingClientRect().left;
-			moveDir = (touchX < canvas.width / 2) ? "left" : "right";
-			e.preventDefault();
-		});
-
-		/* タッチ終了：指を離したら停止 */
-		canvas.addEventListener("touchend", e => {
-			moveDir = null;
-			e.preventDefault();
-		});
-
-		/* キーボード左右で動かす */
-		/* キーボード操作: 左右キーで移動 */
-		document.addEventListener("keydown", e => {
-			if (!gameStarted || gameOver || !player || !playerControlEnabled) return;
-			if (e.key === "ArrowLeft") moveDir = "left";
-			if (e.key === "ArrowRight") moveDir = "right";
-		});
-		document.addEventListener("keyup", e => {
-			if (e.key === "ArrowLeft" && moveDir === "left") moveDir = null;
-			if (e.key === "ArrowRight" && moveDir === "right") moveDir = null;
-		});
-
-		/* ========== メインループ ========== */
-		let autoShootTimer = null;
-		function gameLoop(time) {
-			ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-			// 背景
-			ctx.fillStyle = "#111";
-			ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-			if (gameStarted) {
-				// プレイヤー
-				if (player) {player.update(); player.draw();}
-
-				// プレイヤー弾
-				for (let i = bullets.length - 1; i >= 0; i--) {
-					const b = bullets[i];
-					b.update();
-					b.draw();
-					if (b.y + b.height < 0) {bullets.splice(i, 1); continue;}
-
-					// ボス判定
-					if (boss && !boss.defeating) {
-						if (b.x < boss.x + boss.width && b.x + b.width > boss.x &&
-							b.y < boss.y + boss.height && b.y + b.height > boss.y) {
-							bullets.splice(i, 1);
-							boss.hit();
-							continue;
-						}
-					}
-				}
-
-				// 雑魚
-				for (let i = enemies.length - 1; i >= 0; i--) {
-					const e = enemies[i];
-					e.update();
-					e.draw();
-					if (e.y > canvas.height) {enemies.splice(i, 1); continue;}
-
-					// プレイヤー衝突
-					if (player && player.x < e.x + e.width && player.x + player.width > e.x &&
-						player.y < e.y + e.height && player.y + player.height > e.y) {
-						endGame(); break;
-					}
-
-					// プレイヤー弾判定
-					for (let j = bullets.length - 1; j >= 0; j--) {
-						const bb = bullets[j];
-						if (bb.x < e.x + e.width && bb.x + bb.width > e.x &&
-							bb.y < e.y + e.height && bb.y + bb.height > e.y) {
-							bullets.splice(j, 1);
-							enemies.splice(i, 1);
-							break;
-						}
-					}
-				}
-
-				// 敵弾
-				for (let i = enemyBullets.length - 1; i >= 0; i--) {
-					const eb = enemyBullets[i];
-					eb.update();
-					eb.draw();
-					if (eb.y > canvas.height) {enemyBullets.splice(i, 1); continue;}
-
-					if (player && player.x < eb.x + eb.width && player.x + player.width > eb.x &&
-						player.y < eb.y + eb.height && player.y + player.height > eb.y) {
-						endGame(); break;
-					}
-				}
-
-				// ボス弾
-				for (let i = bossBullets.length - 1; i >= 0; i--) {
-					const bb = bossBullets[i];
-					bb.update();
-					bb.draw();
-					if (bb.y > canvas.height + 100) {bossBullets.splice(i, 1); continue;}
-
-					if (player && player.x < bb.x + bb.width && player.x + player.width > bb.x &&
-						player.y < bb.y + bb.height && player.y + player.height > bb.y) {
-						endGame(); break;
-					}
-				}
-
-				// 爆発
-				for (let i = explosions.length - 1; i >= 0; i--) {
-					explosions[i].update();
-					explosions[i].draw();
-					if (explosions[i].r > explosions[i].maxR) explosions.splice(i, 1);
-				}
-
-				// ボス
-				if (boss) {
-					boss.update(time);
-					boss.draw();
-					if (boss.defeating && boss.alpha <= 0.01) boss = null;
-				}
-			}
-
-			// ---------------------------
-			// 描画: Game Clear / Game Over
-			// ---------------------------
-			ctx.fillStyle = "white";
-			ctx.font = "30px Arial";
-			ctx.textAlign = "center";
-
-			if (rewardBtn.style.display === "block") {
-				// クリア優先
-				ctx.fillText("Game Clear", canvas.width / 2, 60);
-			} else if (gameOver) {
-				// クリアしていなければ Game Over
-				ctx.fillText("Game Over", canvas.width / 2, 60);
-			}
-
-			// 次フレーム
-			if (!gameOver || rewardBtn.style.display === "block") {
-				requestAnimationFrame(gameLoop);
-			}
-		}
-
-
-		/* ========== ユーティリティ / 初期化 ========== */
-		/* retry はリロードで簡単に */
-		retryBtn.onclick = () => location.reload();
-		/* rewardBtn は初期非表示（クリック時遷移先を任意に） */
-		rewardBtn.onclick = () => {window.location.href = "Fade.html";};
-		rewardBtn.style.display = "none";
-
-		/* カウントダウン開始でゲームスタート */
-		window.onload = startCountdown;
-
-	</script>
+    <canvas id="gameCanvas" width="400" height="600"></canvas>
+    <div id="countdown"></div>
+    <button id="retryBtn" class="actionBtn">リトライ</button>
+    <button id="rewardBtn" class="actionBtn">報酬をゲット</button>
+
+    <script>
+        /* ========== 初期設定 ========== */
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const countdownEl = document.getElementById("countdown");
+        const retryBtn = document.getElementById("retryBtn");
+        const rewardBtn = document.getElementById("rewardBtn");
+
+        let player, bullets = [], enemies = [], enemyBullets = [], boss = null, bossBullets = [], explosions = [];
+        let gameStarted = false, gameOver = false, bossSpawned = false, playerControlEnabled = true;
+        let moveDir = null, startTime = 0, enemySpawner = null, autoShootTimer = null;
+
+        /* ========== キャンバスリサイズ ========== */
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('orientationchange', resizeCanvas);
+        resizeCanvas();
+
+        /* ========== プレイヤークラス ========== */
+        class Player {
+            constructor() {
+                this.width = 30;
+                this.height = 30;
+                this.x = canvas.width / 2 - this.width / 2;
+                this.y = canvas.height - 50;
+                this.speed = 6;
+                this.cooldown = 0;
+            }
+            update() {
+                if (!playerControlEnabled) return;
+                if (moveDir === "left" && this.x > 0) this.x -= this.speed;
+                if (moveDir === "right" && this.x + this.width < canvas.width) this.x += this.speed;
+                if (this.cooldown > 0) this.cooldown--;
+            }
+            draw() {
+                ctx.fillStyle = "blue";
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+            }
+        }
+
+        /* ========== プレイヤー弾 ========== */
+        class Bullet {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.width = 5;
+                this.height = 10;
+                this.speed = 8;
+            }
+            update() { this.y -= this.speed; }
+            draw() { ctx.fillStyle = "red"; ctx.fillRect(this.x, this.y, this.width, this.height); }
+        }
+
+        /* ========== 雑魚 ========== */
+        class Enemy {
+            constructor() {
+                this.width = 30;
+                this.height = 30;
+                this.x = Math.random() * (canvas.width - this.width);
+                this.y = -30;
+                this.speed = 2;
+            }
+            update() {
+                this.y += this.speed;
+                if (Math.random() < 0.02) enemyBullets.push(new EnemyBullet(this.x + this.width / 2, this.y + this.height));
+            }
+            draw() { ctx.fillStyle = "lime"; ctx.fillRect(this.x, this.y, this.width, this.height); }
+        }
+
+        /* ========== 雑魚弾 ========== */
+        class EnemyBullet {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.width = 8;
+                this.height = 8;
+                this.speed = 4;
+            }
+            update() { this.y += this.speed; }
+            draw() { ctx.fillStyle = "yellow"; ctx.fillRect(this.x, this.y, this.width, this.height); }
+        }
+
+        /* ========== 爆発エフェクト ========== */
+        class Explosion {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.r = 6;
+                this.maxR = 40;
+            }
+            update() { this.r += 2; }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+                ctx.fillStyle = "orange";
+                ctx.fill();
+            }
+        }
+
+        /* ========== ボスクラス ========== */
+        class Boss {
+            constructor() {
+                this.width = player.width * 3;
+                this.height = 50;
+                this.x = canvas.width / 2 - this.width / 2;
+                this.y = 30;
+                this.vx = 2;
+                this.hp = 10;
+                this.lastShot = 0;
+                this.defeating = false;
+                this.alpha = 1.0;
+                this.defeatStartTime = 0;
+            }
+
+            update(time) {
+                if (this.defeating) {
+                    const elapsed = time - this.defeatStartTime;
+                    const t = Math.min(elapsed / 3000, 1);
+                    this.y -= 0.6;
+                    this.alpha = 1 - t;
+                    if (Math.random() < 0.3) explosions.push(new Explosion(this.x + Math.random() * this.width, this.y + Math.random() * this.height));
+                    return;
+                }
+                // 左右往復
+                this.x += this.vx;
+                if (this.x < 0 || this.x + this.width > canvas.width) this.vx *= -1;
+                // 射撃
+                if (time - this.lastShot >= 1000) { this.shootThree(); this.lastShot = time; }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.fillStyle = "blue";
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+                // HPバー
+                ctx.fillStyle = "lime";
+                ctx.fillRect((canvas.width - 200) / 2, 10, 200 * (this.hp / 10), 8);
+                ctx.strokeStyle = "white";
+                ctx.strokeRect((canvas.width - 200) / 2, 10, 200, 8);
+                ctx.restore();
+            }
+
+            shootThree() {
+                const cx = this.x + this.width / 2;
+                const cy = this.y + this.height;
+                bossBullets.push(new BossBullet(cx, cy, -2, 3));
+                bossBullets.push(new BossBullet(cx, cy, 0, 4));
+                bossBullets.push(new BossBullet(cx, cy, 2, 3));
+            }
+
+            hit() {
+                if (this.defeating) return;
+                this.hp--;
+                if (this.hp <= 0) {
+                    this.defeating = true;
+                    this.defeatStartTime = performance.now();
+                    playerControlEnabled = false;
+                    enemies = [];
+                    enemyBullets = [];
+                    bossBullets = [];
+                    bullets = [];
+                    clearInterval(autoShootTimer);
+                    setTimeout(() => showGameClear(), 3000);
+                }
+            }
+        }
+
+        /* ========== ボス弾 ========== */
+        class BossBullet {
+            constructor(x, y, vx = 0, vy = 4) {
+                this.x = x;
+                this.y = y;
+                this.vx = vx;
+                this.vy = vy;
+                this.width = 12;
+                this.height = 12;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                if (this.x < 0 || this.x + this.width > canvas.width) this.vx *= -1;
+            }
+            draw() { ctx.fillStyle = "orange"; ctx.fillRect(this.x, this.y, this.width, this.height); }
+        }
+
+        /* ========== ゲーム管理 ========== */
+        function startCountdown() {
+            let t = 3;
+            countdownEl.innerText = t;
+            const timer = setInterval(() => {
+                t--;
+                if (t > 0) countdownEl.innerText = t;
+                else if (t === 0) countdownEl.innerText = "START!";
+                else { clearInterval(timer); countdownEl.style.display = "none"; startGame(); }
+            }, 1000);
+        }
+
+        function startGame() {
+            player = new Player();
+            gameStarted = true;
+            startTime = Date.now();
+
+            enemySpawner = setInterval(() => {
+                if (!gameOver && !bossSpawned) enemies.push(new Enemy());
+            }, 1200);
+
+            setTimeout(() => { if (!gameOver) spawnBoss(); }, 10000);
+
+            autoShootTimer = setInterval(() => {
+                if (gameStarted && !gameOver && player) bullets.push(new Bullet(player.x + player.width / 2, player.y));
+            }, 300);
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function spawnBoss() {
+            if (bossSpawned) return;
+            bossSpawned = true;
+            boss = new Boss();
+        }
+
+        function showGameClear() {
+            gameOver = true;
+            rewardBtn.style.display = "block";
+            rewardBtn.onclick = () => { window.location.href = "Fade.html"; };
+        }
+
+        function endGame() {
+            if (!player) return;
+            explosions.push(new Explosion(player.x + player.width / 2, player.y + player.height / 2));
+            playerControlEnabled = false;
+            setTimeout(() => {
+                gameOver = true;
+                retryBtn.style.display = "block";
+                player = null;
+            }, 500);
+        }
+
+        retryBtn.onclick = () => location.reload();
+        rewardBtn.style.display = "none";
+
+        /* ========== 入力処理 ========== */
+        canvas.addEventListener("touchstart", e => {
+            if (!gameStarted || gameOver || !player || !playerControlEnabled) return;
+            const touchX = e.touches[0].clientX - canvas.getBoundingClientRect().left;
+            moveDir = touchX < canvas.width / 2 ? "left" : "right";
+            e.preventDefault();
+        });
+        canvas.addEventListener("touchmove", e => {
+            if (!gameStarted || gameOver || !player || !playerControlEnabled) return;
+            const touchX = e.touches[0].clientX - canvas.getBoundingClientRect().left;
+            moveDir = touchX < canvas.width / 2 ? "left" : "right";
+            e.preventDefault();
+        });
+        canvas.addEventListener("touchend", e => { moveDir = null; e.preventDefault(); });
+
+        document.addEventListener("keydown", e => {
+            if (!gameStarted || gameOver || !player || !playerControlEnabled) return;
+            if (e.key === "ArrowLeft") moveDir = "left";
+            if (e.key === "ArrowRight") moveDir = "right";
+        });
+        document.addEventListener("keyup", e => {
+            if (e.key === "ArrowLeft" && moveDir === "left") moveDir = null;
+            if (e.key === "ArrowRight" && moveDir === "right") moveDir = null;
+        });
+
+        /* ========== メインループ ========== */
+        function gameLoop(time) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#111";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            if (gameStarted) {
+                // プレイヤー
+                if (player) { player.update(); player.draw(); }
+
+                // プレイヤー弾
+                for (let i = bullets.length - 1; i >= 0; i--) {
+                    const b = bullets[i];
+                    b.update(); b.draw();
+                    if (b.y + b.height < 0) { bullets.splice(i, 1); continue; }
+                    if (boss && !boss.defeating && b.x < boss.x + boss.width && b.x + b.width > boss.x &&
+                        b.y < boss.y + boss.height && b.y + b.height > boss.y) {
+                        bullets.splice(i, 1); boss.hit(); continue;
+                    }
+                }
+
+                // 雑魚
+                for (let i = enemies.length - 1; i >= 0; i--) {
+                    const e = enemies[i];
+                    e.update(); e.draw();
+                    if (e.y > canvas.height) { enemies.splice(i, 1); continue; }
+
+                    if (player && player.x < e.x + e.width && player.x + player.width > e.x &&
+                        player.y < e.y + e.height && player.y + player.height > e.y) { endGame(); break; }
+
+                    for (let j = bullets.length - 1; j >= 0; j--) {
+                        const bb = bullets[j];
+                        if (bb.x < e.x + e.width && bb.x + bb.width > e.x &&
+                            bb.y < e.y + e.height && bb.y + bb.height > e.y) {
+                            bullets.splice(j, 1); enemies.splice(i, 1); break;
+                        }
+                    }
+                }
+
+                // 敵弾
+                for (let i = enemyBullets.length - 1; i >= 0; i--) {
+                    const eb = enemyBullets[i];
+                    eb.update(); eb.draw();
+                    if (eb.y > canvas.height) { enemyBullets.splice(i, 1); continue; }
+                    if (player && player.x < eb.x + eb.width && player.x + player.width > eb.x &&
+                        player.y < eb.y + eb.height && player.y + player.height > eb.y) { endGame(); break; }
+                }
+
+                // ボス弾
+                for (let i = bossBullets.length - 1; i >= 0; i--) {
+                    const bb = bossBullets[i];
+                    bb.update(); bb.draw();
+                    if (bb.y > canvas.height + 100) { bossBullets.splice(i, 1); continue; }
+                    if (player && player.x < bb.x + bb.width && player.x + player.width > bb.x &&
+                        player.y < bb.y + bb.height && player.y + player.height > bb.y) { endGame(); break; }
+                }
+
+                // 爆発
+                for (let i = explosions.length - 1; i >= 0; i--) {
+                    explosions[i].update(); explosions[i].draw();
+                    if (explosions[i].r > explosions[i].maxR) explosions.splice(i, 1);
+                }
+
+                // ボス
+                if (boss) { boss.update(time); boss.draw(); if (boss.defeating && boss.alpha <= 0.01) boss = null; }
+            }
+
+            // 描画: Game Clear / Game Over
+            ctx.fillStyle = "white";
+            ctx.font = "30px Arial";
+            ctx.textAlign = "center";
+            if (rewardBtn.style.display === "block") ctx.fillText("Game Clear", canvas.width / 2, 60);
+            else if (gameOver) ctx.fillText("Game Over", canvas.width / 2, 60);
+
+            if (!gameOver || rewardBtn.style.display === "block") requestAnimationFrame(gameLoop);
+        }
+
+        /* ========== 初期化 ========== */
+        window.onload = startCountdown;
+    </script>
 </body>
 
 </html>
