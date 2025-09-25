@@ -67,15 +67,17 @@
 
 	<script>
 		/* ========== 基本セットアップ ========== */
-		const canvas = document.getElementById("gameCanvas");
 		function resizeCanvas() {
+			const vh = window.innerHeight * 0.01; // iPhone のブラウザバーを考慮
 			canvas.width = window.innerWidth;
 			canvas.height = window.innerHeight;
+			// または canvas.height = vh * 100;
 		}
 
 		window.addEventListener('resize', resizeCanvas);
 		window.addEventListener('orientationchange', resizeCanvas);
 		resizeCanvas(); // 初期呼び出し
+
 
 		const ctx = canvas.getContext("2d");
 		const countdownEl = document.getElementById("countdown");
@@ -95,7 +97,7 @@
 				this.width = 30;
 				this.height = 30;
 				this.x = canvas.width / 2 - this.width / 2;
-				this.y = canvas.height - 50;
+				this.y = canvas.height - 50; // canvas 高さ基準
 				this.speed = 6;
 				this.cooldown = 0;
 			}
