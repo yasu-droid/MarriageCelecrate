@@ -11,17 +11,23 @@
 			margin: 0;
 			background: #000;
 			display: flex;
-			justify-content: center;
-			align-items: center;
+			justify-content: flex-start;
+			/* 上寄せに変更 */
+			align-items: flex-start;
+			/* 上寄せ */
 			height: 100vh;
 			overflow: hidden;
+			position: relative;
 		}
 
 		canvas {
 			background: #111;
 			display: block;
 			touch-action: none;
+			margin-top: 0;
+			/* 上部にぴったり */
 		}
+
 
 		/* カウントダウン中央表示 */
 		#countdown {
@@ -62,6 +68,15 @@
 	<script>
 		/* ========== 基本セットアップ ========== */
 		const canvas = document.getElementById("gameCanvas");
+		function resizeCanvas() {
+			canvas.width = window.innerWidth;
+			canvas.height = window.innerHeight;
+		}
+
+		window.addEventListener('resize', resizeCanvas);
+		window.addEventListener('orientationchange', resizeCanvas);
+		resizeCanvas(); // 初期呼び出し
+
 		const ctx = canvas.getContext("2d");
 		const countdownEl = document.getElementById("countdown");
 		const retryBtn = document.getElementById("retryBtn");
