@@ -76,7 +76,6 @@
 				}
 			}
 		}
-
 	</style>
 </head>
 
@@ -86,9 +85,8 @@
 		<p>思い出とメッセージをここに集めました</p>
 	</header>
 
-	<nav>
-		<a href="album.html">📷 思い出アルバム</a>
-		<a href="message.html">💌 メッセージ集</a>
+	<nav id="navArea">
+		<!-- JavaScriptでここにリンクを差し込む -->
 	</nav>
 
 	<div class="footer">
@@ -96,6 +94,14 @@
 	</div>
 
 	<script>
+		// 保存された名前を取得
+		const name = localStorage.getItem("name");
+
+		if (name === "阪本明恵") {
+			navArea.innerHTML = `<a href="message.html">💌 メッセージ集</a>`;
+		} else {
+			navArea.innerHTML = `<a href="message2.html">💌 メッセージ集</a>`;
+		}
 		// 花びらを生成する演出
 		function createPetal() {
 			const petal = document.createElement("div");

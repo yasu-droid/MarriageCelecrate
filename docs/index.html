@@ -103,6 +103,9 @@
 			return; // ここで処理終了
 		}
 
+		// 入力値を保存
+		localStorage.setItem("name", name);
+
 		// 入力値ごとに分岐
 		if (name === "阪本明恵") {
 			window.location.href = "Fade.html";
