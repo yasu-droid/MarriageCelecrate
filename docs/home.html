@@ -99,8 +99,10 @@
 
 		if (name === "阪本明恵") {
 			navArea.innerHTML = `<a href="message.html">💌 メッセージ集</a>`;
-		} else {
+		} else if (name === "阪本紀之") {
 			navArea.innerHTML = `<a href="message2.html">💌 メッセージ集</a>`;
+		} else {
+			navArea.innerHTML = `<a href="message3.html">💌 メッセージ集</a>`;
 		}
 		// 花びらを生成する演出
 		function createPetal() {
