@@ -5,9 +5,14 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>メッセージ集</title>
+
+	<!-- 外部CSSの読み込み -->
 	<link rel="stylesheet" href="css/style.css">
+
 	<style>
+		/* 画面幅1000px以下のときのデザイン設定（スマホ対応） */
 		@media screen and (max-width:1000px) {
+
 			body {
 				margin: 0;
 				font-family: "Hiragino Maru Gothic Pro", "Segoe UI", sans-serif;
@@ -25,12 +30,14 @@
 				margin: 0;
 			}
 
+			/* メッセージ全体のコンテナ */
 			.message-container {
 				max-width: 700px;
 				margin: 2rem auto;
 				padding: 1rem;
 			}
 
+			/* 各メッセージブロックのデザイン */
 			.message {
 				background: white;
 				margin: 1rem 0;
@@ -72,11 +79,16 @@
 </head>
 
 <body>
+
+	<!-- ヘッダー部分 -->
 	<header>
 		<h1>💌 お祝いのビデオメッセージ</h1>
 	</header>
 
+	<!-- メッセージ全体を包む -->
 	<div class="message-container">
+
+		<!-- ① ポリスさんのメッセージ -->
 		<div class="message">
 			<p>新しい門出にたくさんの幸せが訪れますように！</p>
 			<p class="author">— ポリス</p>
@@ -85,6 +97,8 @@
 				お使いのブラウザでは動画を再生できません。
 			</video>
 		</div>
+
+		<!-- ② マンボウさんのメッセージ -->
 		<div class="message">
 			<p>笑顔あふれる毎日になりますように！</p>
 			<p class="author">— マンボウ</p>
@@ -93,17 +107,22 @@
 				お使いのブラウザでは動画を再生できません。
 			</video>
 		</div>
+
+		<!-- ③ ぶちゃ＆だるま＆プルタブさん -->
 		<div class="message">
 			<p>10月末更新！！</p>
 			<p class="author">— ぶちゃ＆だるま＆プルタブ</p>
-			<img src="images/next組.png" alt="10月末更新メッセージ" width="300" style="border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,0.1);">
+			<img src="images/next組.png" alt="10月末更新メッセージ" width="300"
+				style="border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,0.1);">
 		</div>
-		<!-- 追加したい場合はここに .message を増やす -->
+
+		<!-- ★ 追加したい場合は下に新しい .message をコピーして増やせます -->
 	</div>
 
+	<!-- ナビゲーション（ホームに戻るリンク） -->
 	<nav>
 		<a href="index.html">🏠 ホームに戻る</a>
 	</nav>
-</body>
 
+</body>
 </html>
